@@ -1,4 +1,4 @@
-package com.srujun.openhearthstone.assets;
+package com.srujun.openhearthstone.net;
 
 import com.badlogic.gdx.assets.loaders.FileHandleResolver;
 import com.badlogic.gdx.files.FileHandle;

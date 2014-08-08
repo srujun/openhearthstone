@@ -1,4 +1,4 @@
-package com.srujun.openhearthstone.assets;
+package com.srujun.openhearthstone.net;
 
 import com.badlogic.gdx.assets.AssetDescriptor;
 import com.badlogic.gdx.assets.AssetLoaderParameters;
