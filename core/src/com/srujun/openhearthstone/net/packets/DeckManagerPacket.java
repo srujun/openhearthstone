@@ -1,6 +1,7 @@
 package com.srujun.openhearthstone.net.packets;
 
 import java.util.List;
+import java.util.Set;
 
 public class DeckManagerPacket {
     static public class GetDecks {
@@ -15,42 +16,48 @@ public class DeckManagerPacket {
         public Deck deck;
 
         public NewDeck() {}
-        public NewDeck(String deckName, int heroId) {
+        public NewDeck(String deckName, Classs classs) {
             this.deck = new Deck();
             this.deck.name = deckName;
-            this.deck.heroId = heroId;
+            this.deck.classs = classs;
         }
     }
 
     static public class EditDeck {
-        public String name;
-
-        public Classs classs;
         public Deck deck;
-        public List<Card> cards;
+        public Set<Card> cardSet;
 
         public EditDeck() {}
-        public EditDeck(String deckName) {
-            this.name = deckName;
+        public EditDeck(String deckName, Classs classs) {
+            this.deck = new Deck();
+            this.deck.name = deckName;
+            this.deck.classs = classs;
         }
     }
 
     static public class Deck {
         public String name;
-        public int heroId;
-        public String hero;
-        public List<Integer> cardsIds;
+        public Classs classs;
+        public List<Card> cards;
 
         public Deck() {}
+        public Deck(String name, int heroId) {
+            this.name = name;
+            this.classs = new Classs(heroId);
+        }
     }
 
     static public class Classs {
+        public int classs;
         public String name;
         public int heroId;
-        public int classs;
+        public String heroName;
         public String heroImage;
 
         public Classs() {}
+        public Classs(int heroId) {
+            this.heroId = heroId;
+        }
     }
 
     static public class Card {
