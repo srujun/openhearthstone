@@ -41,6 +41,10 @@ public class CredentialsListener extends Listener {
                         OHGame.instance.askNewUsername("Not found! Enter new username:");
                         break;
                     case SUCCESSFUL:
+                        // Save the username to the preferences.
+                        OHGame.instance.prefs.putString("username", response.suppliedUsername);
+                        OHGame.instance.prefs.flush();
+
                         OHGame.instance.loggedIn = true;
                         OHGame.instance.loginUIGroup.setVisible(false);
                         OHGame.log("User \"" + OHGame.instance.getUsername() + "\" has logged in!");

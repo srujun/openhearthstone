@@ -7,12 +7,14 @@ public class CredentialsPacket {
             INVALID, ALREADY_EXISTS, NOT_FOUND, SUCCESSFUL
         }
 
-        public LoginResponse() {}
-        public LoginResponse(Response message) {
-            this.message = message;
-        }
-
         public Response message;
+        public String suppliedUsername;
+
+        public LoginResponse() {}
+        public LoginResponse(Response message, String suppliedUsername) {
+            this.message = message;
+            this.suppliedUsername = suppliedUsername;
+        }
     }
 
     public CredentialsPacket() {}
@@ -24,4 +26,3 @@ public class CredentialsPacket {
     public boolean isNewUsername;
     public String username;
 }
-
