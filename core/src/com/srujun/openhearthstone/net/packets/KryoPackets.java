@@ -21,6 +21,8 @@ public class KryoPackets {
         kryo.register(DeckManagerPacket.GetClasses.class);
         kryo.register(DeckManagerPacket.Classs.class);
         kryo.register(DeckManagerPacket.NewDeck.class);
+        kryo.register(DeckManagerPacket.EditDeck.class);
+        kryo.register(DeckManagerPacket.Card.class);
         kryo.register(List.class);
         kryo.register(ArrayList.class);
     }
