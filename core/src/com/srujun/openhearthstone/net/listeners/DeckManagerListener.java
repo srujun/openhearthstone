@@ -56,5 +56,22 @@ public class DeckManagerListener extends Listener {
                 }
             }
         }
+
+        // If the packet sent is a response to an EditDeck request
+        if(object instanceof DeckManagerPacket.EditDeck) {
+            final DeckManagerPacket.Classs classs = ((DeckManagerPacket.EditDeck) object).classs;
+            final DeckManagerPacket.Deck deck = ((DeckManagerPacket.EditDeck) object).deck;
+            final List<DeckManagerPacket.Card> cards = ((DeckManagerPacket.EditDeck) object).cards;
+
+            // Ignore setting EditDeckUI if the current screen isn't DeckManagerScreen.
+            if(OHGame.instance.getScreen().getClass().getSimpleName().equals(DeckManagerScreen.class.getSimpleName())) {
+                Gdx.app.postRunnable(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((DeckManagerScreen) OHGame.instance.getScreen()).setEditDeckUI(classs, deck, cards);
+                    }
+                });
+            }
+        }
     }
 }

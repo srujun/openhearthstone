@@ -5,17 +5,18 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.srujun.openhearthstone.OHGame;
 import com.srujun.openhearthstone.net.packets.DeckManagerPacket;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 public class DeckManagerScreen implements Screen {
     private enum States {
@@ -24,14 +25,15 @@ public class DeckManagerScreen implements Screen {
 
     private HashMap<TextButton, DeckManagerPacket.Deck> decksMap;
     private HashMap<Table, DeckManagerPacket.Classs> classesMap;
+    private ArrayList<DeckManagerPacket.Card> editDeckCardsList;
 
     private Group deckManagerUIGroup;
 
-    private Group decksButtonsGroup;
-    private TextButton newDeckButton;
+    private Group viewDecksGroup;
     private Table newDeckClassesTable;
     private Window newDeckNameWindow;
     private Group editDeckGroup;
+    private Table editDeckCardsListTable;
 
     public DeckManagerScreen() {
         this.decksMap = new HashMap<TextButton, DeckManagerPacket.Deck>(9);
@@ -42,22 +44,9 @@ public class DeckManagerScreen implements Screen {
         OHGame.instance.stage.addActor(deckManagerUIGroup);
 
         // Decks Buttons group
-        this.decksButtonsGroup = new Group();
-        decksButtonsGroup.setName("DecksButtonsGroup");
-        deckManagerUIGroup.addActor(decksButtonsGroup);
-
-        // New Deck Button
-        this.newDeckButton = new TextButton("New Deck", OHGame.instance.skin);
-        newDeckButton.setName("NewDeckButton");
-        newDeckButton.setSize(480f, 120f);
-        newDeckButton.setPosition(OHGame.WIDTH / 2 - newDeckButton.getWidth() / 2, 20f);
-        newDeckButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                changeState(States.NEW_DECK_CLASS);
-            }
-        });
-        deckManagerUIGroup.addActor(newDeckButton);
+        this.viewDecksGroup = new Group();
+        viewDecksGroup.setName("ViewDecksGroup");
+        deckManagerUIGroup.addActor(viewDecksGroup);
 
         // New Deck Classes table
         this.newDeckClassesTable = new Table(OHGame.instance.skin);
@@ -72,23 +61,52 @@ public class DeckManagerScreen implements Screen {
         // Edit Deck Group
         this.editDeckGroup = new Group();
         editDeckGroup.setName("EditDeckGroup");
+        editDeckGroup.setVisible(false);
+        deckManagerUIGroup.addActor(editDeckGroup);
 
         changeState(States.VIEW_DECKS);
     }
 
     public void setViewDecksUI(ArrayList<DeckManagerPacket.Deck> decks) {
-        // Clear the existing deck buttons group
-        decksButtonsGroup.clear();
+        // User Decks Table
+        Table decksTable = new Table(OHGame.instance.skin);
+        decksTable.setSize(350f, 810f);
+        decksTable.setPosition(OHGame.WIDTH/2 - decksTable.getWidth()/2, 140f);
+        decksTable.top();
+        decksTable.defaults().fillX();
+        viewDecksGroup.addActor(decksTable);
 
-        for(int i = 0; i < decks.size(); i++) {
-            DeckManagerPacket.Deck deck = decks.get(i);
+        // Buttons of user's decks.
+        for(final DeckManagerPacket.Deck deck : decks) {
+            TextButton deckButton = new TextButton(deck.hero + ": " + deck.name, OHGame.instance.skin);
+            deckButton.setName("DeckButton:" + deck.name);
+            deckButton.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    // Send server Edit Deck request with the name of the deck to edit.
+                    DeckManagerPacket.EditDeck request = new DeckManagerPacket.EditDeck(deck.name);
+                    OHGame.instance.client.sendTCP(request);
+                    changeState(States.EDIT_DECK);
+                }
+            });
+            decksTable.add(deckButton).size(350f, 80f).padTop(5f).padBottom(5f);
+            decksTable.row();
+            decksMap.put(deckButton, deck);
+        }
 
-            TextButton button = new TextButton(deck.hero + ": " + deck.name, OHGame.instance.skin);
-            button.setName("ClassButton:" + deck.name);
-            button.setSize(355f, 64f);
-            button.setPosition(OHGame.WIDTH/2 - button.getWidth()/2, OHGame.HEIGHT - (100f + 86f*i));
-            decksButtonsGroup.addActor(button);
-            decksMap.put(button, deck);
+        if(decks.size() < 9) {
+            // New Deck Button
+            TextButton newDeckButton = new TextButton("New Deck", OHGame.instance.skin);
+            newDeckButton.setName("NewDeckButton");
+            newDeckButton.setSize(480f, 120f);
+            newDeckButton.setPosition(OHGame.WIDTH / 2 - newDeckButton.getWidth() / 2, 15f);
+            newDeckButton.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    changeState(States.NEW_DECK_CLASS);
+                }
+            });
+            viewDecksGroup.addActor(newDeckButton);
         }
     }
 
@@ -145,7 +163,7 @@ public class DeckManagerScreen implements Screen {
         // Create a TextField where the user will enter the name of the deck
         final TextField deckNameField = new TextField("", OHGame.instance.skin);
         deckNameField.setName("NewDeckNameField");
-        deckNameField.setMessageText("Enter deck name...");
+        deckNameField.setMessageText("Custom " + newDeckClass.name);
         newDeckNameWindow.add(deckNameField);
 
         // Create a TextButton to submit the name of the deck
@@ -157,8 +175,19 @@ public class DeckManagerScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 deckNameField.getOnscreenKeyboard().show(false);
 
+                // Find out if the entered deck name already exists.
+                boolean deckNameExists = false;
+                for(DeckManagerPacket.Deck deck : decksMap.values()) {
+                    if(deck.name.equals(deckNameField.getText())) {
+                        deckNameExists = true;
+                        break;
+                    }
+                }
+
                 if (deckNameField.getText().isEmpty()) {
                     newDeckNameWindow.setTitle("New " + newDeckClass.name + " Deck: invalid name!");
+                } else if(deckNameExists) {
+                    newDeckNameWindow.setTitle("New " + newDeckClass.name + " Deck: name exists!");
                 } else {
                     // Send server a New Deck Request
                     DeckManagerPacket.NewDeck newDeckRequest = new DeckManagerPacket.NewDeck(deckNameField.getText().trim(),
@@ -173,6 +202,64 @@ public class DeckManagerScreen implements Screen {
         deckManagerUIGroup.addActor(newDeckNameWindow);
     }
 
+    public void setEditDeckUI(DeckManagerPacket.Classs deckClass, DeckManagerPacket.Deck deck,
+                              java.util.List<DeckManagerPacket.Card> cards) {
+        OHGame.log("EditDeckUI: Class=" + deckClass.name + ", Name=" + deck.name + ", Cards=" + deck.cardsIds.size());
+
+        editDeckCardsListTable = new Table(OHGame.instance.skin);
+        editDeckCardsListTable.setName("DeckCardsListTable");
+        editDeckCardsListTable.setWidth(260f);
+        editDeckCardsListTable.padLeft(25f);
+        editDeckCardsListTable.defaults().expand();
+        // Populate the card list table
+        for(DeckManagerPacket.Card card : cards) {
+            addCardToEditDeckList(card);
+        }
+
+        final ScrollPane deckCardsListPane = new ScrollPane(editDeckCardsListTable, OHGame.instance.skin);
+        deckCardsListPane.setName("DeckCardsListPane");
+        deckCardsListPane.getStyle().background = new BaseDrawable();
+        deckCardsListPane.setClamp(true);
+        deckCardsListPane.setFadeScrollBars(true);
+        deckCardsListPane.setFlickScroll(true);
+        deckCardsListPane.setSize(310f, 855f);
+        deckCardsListPane.setPosition(285f, 20f);
+        deckCardsListPane.setVisible(false);
+        editDeckGroup.addActor(deckCardsListPane);
+
+        TextButton deckInfoButton = new TextButton(deckClass.name + ": " + deck.name, OHGame.instance.skin);
+        deckInfoButton.setName("DeckInfoButton");
+        deckInfoButton.setSize(310f, 64f);
+        deckInfoButton.setPosition(285f, OHGame.HEIGHT - 74f);
+        deckInfoButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                deckCardsListPane.setVisible(!deckCardsListPane.isVisible());
+            }
+        });
+        editDeckGroup.addActor(deckInfoButton);
+    }
+
+    private void addCardToEditDeckList(DeckManagerPacket.Card newCard) {
+        // Search through editDeckCardsListTable and see if this card is already in it.
+        boolean isCardAlreadyInTable = false;
+        for(Actor cardContainerActor : editDeckCardsListTable.getChildren()) {
+            if(cardContainerActor.getName().equals("CardButton:\"" + newCard.name + "\"")) {
+                isCardAlreadyInTable = true;
+                TextButton cardButton = (TextButton) cardContainerActor;
+                cardButton.setText(cardButton.getText() + " x2");
+                break;
+            }
+        }
+
+        if(!isCardAlreadyInTable) {
+            TextButton cardButton = new TextButton(newCard.cost + ": " + newCard.name, OHGame.instance.skin);
+            cardButton.setName("CardButton:\"" + newCard.name + "\"");
+            editDeckCardsListTable.add(cardButton).size(260f, 70f).space(5f, 0f, 5f, 0f);
+            editDeckCardsListTable.row();
+        }
+    }
+
     private void changeState(States newState) {
         switch(newState) {
             case VIEW_DECKS:
@@ -181,29 +268,31 @@ public class DeckManagerScreen implements Screen {
                 OHGame.instance.client.sendTCP(decksRequest);
 
                 newDeckClassesTable.setVisible(false);
-                decksButtonsGroup.setVisible(true);
-                newDeckButton.setVisible(true);
+                newDeckNameWindow.setVisible(false);
+                editDeckGroup.setVisible(false);
+                viewDecksGroup.setVisible(true);
                 break;
             case NEW_DECK_CLASS:
                 // Request server for classes
                 DeckManagerPacket.GetClasses classesRequest = new DeckManagerPacket.GetClasses();
                 OHGame.instance.client.sendTCP(classesRequest);
 
-                decksButtonsGroup.setVisible(false);
-                newDeckButton.setVisible(false);
+                viewDecksGroup.setVisible(false);
+                newDeckNameWindow.setVisible(false);
+                editDeckGroup.setVisible(false);
                 newDeckClassesTable.setVisible(true);
                 break;
             case NEW_DECK_NAME:
                 newDeckClassesTable.setVisible(false);
-                decksButtonsGroup.setVisible(false);
-                newDeckButton.setVisible(false);
+                viewDecksGroup.setVisible(false);
+                editDeckGroup.setVisible(false);
                 newDeckNameWindow.setVisible(true);
                 break;
             case EDIT_DECK:
-                decksButtonsGroup.setVisible(false);
-                newDeckButton.setVisible(false);
+                viewDecksGroup.setVisible(false);
                 newDeckClassesTable.setVisible(false);
                 newDeckNameWindow.setVisible(false);
+                editDeckGroup.setVisible(true);
                 break;
         }
     }
@@ -214,8 +303,6 @@ public class DeckManagerScreen implements Screen {
             dispose();
             OHGame.instance.changeScreen(new MenuScreen());
         }
-
-        Table.drawDebug(OHGame.instance.stage);
     }
 
     @Override
