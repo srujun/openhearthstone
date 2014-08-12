@@ -6,6 +6,7 @@ import com.esotericsoftware.kryonet.Listener;
 import com.srujun.openhearthstone.OHGame;
 import com.srujun.openhearthstone.net.packets.DeckManagerPacket;
 import com.srujun.openhearthstone.screens.DeckManagerScreen;
+import com.srujun.openhearthstone.screens.EditDeckScreen;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,7 @@ public class DeckManagerListener extends Listener {
                         Gdx.app.postRunnable(new Runnable() {
                             @Override
                             public void run() {
+                                OHGame.log("Received " + decks.size() + " decks.");
                                 ((DeckManagerScreen) OHGame.instance.getScreen()).setViewDecksUI(decks);
                             }
                         });
@@ -59,16 +61,14 @@ public class DeckManagerListener extends Listener {
 
         // If the packet sent is a response to an EditDeck request
         if(object instanceof DeckManagerPacket.EditDeck) {
-            final DeckManagerPacket.Classs classs = ((DeckManagerPacket.EditDeck) object).classs;
             final DeckManagerPacket.Deck deck = ((DeckManagerPacket.EditDeck) object).deck;
-            final List<DeckManagerPacket.Card> cards = ((DeckManagerPacket.EditDeck) object).cards;
 
-            // Ignore setting EditDeckUI if the current screen isn't DeckManagerScreen.
-            if(OHGame.instance.getScreen().getClass().getSimpleName().equals(DeckManagerScreen.class.getSimpleName())) {
+            // Ignore setting EditDeckUI if the current screen isn't EditDeckScreen.
+            if(OHGame.instance.getScreen().getClass().getSimpleName().equals(EditDeckScreen.class.getSimpleName())) {
                 Gdx.app.postRunnable(new Runnable() {
                     @Override
                     public void run() {
-                        ((DeckManagerScreen) OHGame.instance.getScreen()).setEditDeckUI(classs, deck, cards);
+                        ((EditDeckScreen) OHGame.instance.getScreen()).setEditDeckUI(deck);
                     }
                 });
             }

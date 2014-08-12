@@ -4,7 +4,9 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Client;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class KryoPackets {
 
@@ -25,6 +27,8 @@ public class KryoPackets {
         kryo.register(DeckManagerPacket.Card.class);
         kryo.register(List.class);
         kryo.register(ArrayList.class);
+        kryo.register(Set.class);
+        kryo.register(HashSet.class);
     }
 
     // Make KryoPackets a singleton
