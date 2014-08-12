@@ -16,13 +16,13 @@ public class MenuScreen implements Screen {
 
         TextButton playButton = new TextButton("Play", OHGame.instance.skin);
         playButton.setName("PlayButton");
-        playButton.setSize(300f, 96f);
+        playButton.setSize(400f, 160f);
         playButton.setPosition(OHGame.WIDTH/2 - playButton.getWidth()/2, OHGame.HEIGHT/2 + playButton.getHeight());
         menuScreenUIGroup.addActor(playButton);
 
         TextButton decksButton = new TextButton("Decks", OHGame.instance.skin);
         playButton.setName("DecksButton");
-        decksButton.setSize(300f, 96f);
+        decksButton.setSize(400f, 160f);
         decksButton.setPosition(OHGame.WIDTH/2 - decksButton.getWidth()/2, OHGame.HEIGHT/2 - decksButton.getHeight());
         decksButton.addListener(new ClickListener() {
             @Override

@@ -12,7 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.esotericsoftware.kryonet.Client;
 import com.srujun.openhearthstone.entities.GameObjects;
 import com.srujun.openhearthstone.net.NetFileResolver;
@@ -26,7 +26,7 @@ import java.util.Random;
 
 public class OHGame extends Game {
     public static final int PORT = 6391;
-    public static int WIDTH = 540;
+    public static int WIDTH = 600;
     public static int HEIGHT = 960;
     public static OHGame instance;
 
@@ -54,7 +54,7 @@ public class OHGame extends Game {
         this.netAssetManager = new AssetManager(new NetFileResolver());
         this.gameObjects = new GameObjects();
 
-        this.client = new Client();
+        this.client = new Client(8192, 3072);
         KryoPackets.registerPacketClasses(client);
         this.client.start();
 
@@ -86,7 +86,7 @@ public class OHGame extends Game {
         batch = new SpriteBatch();
         prefs = Gdx.app.getPreferences("open-hearthstone");
         skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
-        stage = new Stage(new ExtendViewport(OHGame.WIDTH, OHGame.HEIGHT), batch);
+        stage = new Stage(new FitViewport(OHGame.WIDTH, OHGame.HEIGHT), batch);
 
         Gdx.input.setCatchBackKey(true);
         Gdx.input.setInputProcessor(stage);
@@ -98,19 +98,18 @@ public class OHGame extends Game {
 
         // Login Window children
         usernameField = new TextField("", skin);
+        usernameField.setMessageText("");
         usernameField.setName("UsernameField");
 
-        TextButton loginButton = new TextButton("LogIn", skin);
+        TextButton loginButton = new TextButton("Log In", skin);
         loginButton.setName("LoginButton");
         loginButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 String username = usernameField.getText().trim();
                 usernameField.getOnscreenKeyboard().show(false);
-                prefs.putString("username", username);
-                prefs.flush();
 
-                CredentialsPacket cred = new CredentialsPacket(true, OHGame.instance.getUsername());
+                CredentialsPacket cred = new CredentialsPacket(true, username);
                 client.sendTCP(cred);
             }
         });

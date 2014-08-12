@@ -9,7 +9,7 @@ public class DesktopLauncher {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
         config.title = "OpenHearthstone";
         config.height = 960;
-        config.width = 540;
+        config.width = 600;
 		new LwjglApplication(new OHGame(), config);
 	}
 }
